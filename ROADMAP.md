@@ -10,9 +10,20 @@
 
 ## M1 — Hardware architecture
 
+### M1.1 Architecture baseline
+
+- [x] Define hardware block architecture
+- [x] Define 5 V / 3.3 V power domains
+- [x] Define protection requirements
+- [x] Define Ethernet physical-interface requirements
+- [x] Define mechanical requirements
+- [x] Add preliminary BOM
+
+### M1.2 Schematic and PCB
+
 - [ ] C64 User Port electrical interface specification
 - [ ] W5500 schematic
-- [ ] Power regulation and protection
+- [ ] Power regulation and protection schematic
 - [ ] RJ45/magnetics selection
 - [ ] KiCad PCB layout
 - [ ] ERC/DRC checks

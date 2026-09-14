@@ -1,0 +1,45 @@
+name: KiCad schematic validation
+
+on:
+  push:
+    paths:
+      - 'hardware/kicad/**'
+      - 'tools/ci/**'
+      - '.github/workflows/kicad-schematic.yml'
+  pull_request:
+    paths:
+      - 'hardware/kicad/**'
+      - 'tools/ci/**'
+      - '.github/workflows/kicad-schematic.yml'
+
+jobs:
+  kicad-schematic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install KiCad and headless GUI helpers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y kicad xvfb xdotool
+
+      - name: Migrate legacy schematic
+        run: tools/ci/migrate_kicad_legacy.sh
+
+      - name: Run KiCad ERC
+        run: |
+          mkdir -p build/kicad
+          kicad-cli sch erc \
+            --format json \
+            --severity-all \
+            --output build/kicad/C64Ethernet-erc.json \
+            hardware/kicad/C64Ethernet.kicad_sch
+
+      - name: Upload KiCad validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c64ethernet-kicad-validation
+          path: build/kicad/
+          if-no-files-found: ignore

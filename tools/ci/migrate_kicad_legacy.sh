@@ -13,10 +13,10 @@ if [[ ! -f "$LEGACY" ]]; then
   exit 1
 fi
 
-# KiCad shows its first-run settings wizard when the versioned settings
-# directory does not contain kicad_common.json. In CI, give KiCad a disposable
-# configuration root and seed a valid common settings file so Eeschema opens
-# the requested schematic directly instead of blocking on the wizard.
+# Give KiCad a disposable, fully initialized configuration root. Merely
+# creating kicad_common.json skips the settings-path wizard, but Eeschema then
+# asks how to configure the global symbol library table on a fresh profile.
+# Seed both files so CI never blocks on either first-run dialog.
 export KICAD_CONFIG_HOME="$ROOT/build/kicad/config"
 KICAD_SETTINGS_DIR="$KICAD_CONFIG_HOME/7.0"
 mkdir -p "$KICAD_SETTINGS_DIR"
@@ -33,6 +33,16 @@ cat >"$KICAD_SETTINGS_DIR/kicad_common.json" <<'JSON'
   }
 }
 JSON
+
+# Presence of a valid global sym-lib-table tells KiCad that symbol-library
+# setup has already been completed. The legacy capture carries its custom
+# symbols in its cache library, so an empty global table is sufficient for the
+# migration itself and avoids depending on host-specific library paths.
+cat >"$KICAD_SETTINGS_DIR/sym-lib-table" <<'EOF'
+(sym_lib_table
+  (version 7)
+)
+EOF
 
 # KiCad performs legacy-to-native conversion when a legacy schematic is opened
 # in Eeschema and saved. Run Eeschema under Xvfb. Do not use windowactivate:

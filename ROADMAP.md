@@ -40,8 +40,8 @@
 - [x] Select C64-to-W5500 bridge implementation: CPLD
 - [x] Select reference CPLD family/package
 - [x] Freeze C64 User Port / CPLD logical signal interface
+- [x] Freeze physical LC4032V-5TN48C pin assignment baseline
 - [ ] Native KiCad `.kicad_sch` with real symbols/nets
-- [ ] Physical CPLD package pin assignment
 - [ ] ERC pass
 
 #### M1.2c PCB

@@ -13,6 +13,27 @@ if [[ ! -f "$LEGACY" ]]; then
   exit 1
 fi
 
+# KiCad shows its first-run settings wizard when the versioned settings
+# directory does not contain kicad_common.json. In CI, give KiCad a disposable
+# configuration root and seed a valid common settings file so Eeschema opens
+# the requested schematic directly instead of blocking on the wizard.
+export KICAD_CONFIG_HOME="$ROOT/build/kicad/config"
+KICAD_SETTINGS_DIR="$KICAD_CONFIG_HOME/7.0"
+mkdir -p "$KICAD_SETTINGS_DIR"
+cat >"$KICAD_SETTINGS_DIR/kicad_common.json" <<'JSON'
+{
+  "meta": {
+    "version": 3
+  },
+  "do_not_show_again": {
+    "data_collection_prompt": true,
+    "env_var_overwrite_warning": true,
+    "scaled_3d_models_warning": true,
+    "zone_fill_warning": true
+  }
+}
+JSON
+
 # KiCad performs legacy-to-native conversion when a legacy schematic is opened
 # in Eeschema and saved. Run Eeschema under Xvfb. Do not use windowactivate:
 # Xvfb has no EWMH-capable window manager and xdotool windowactivate therefore
@@ -37,12 +58,17 @@ EESCHEMA_PID=$!
 
 WINDOW=""
 for _ in $(seq 1 60); do
-  WINDOW="$(xdotool search --onlyvisible --class Eeschema 2>/dev/null | head -n1 || true)"
-  if [[ -n "$WINDOW" ]]; then
-    break
-  fi
+  # Ignore auxiliary first-run/dialog windows: wait for the actual schematic
+  # editor title containing the legacy file name.
+  for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do
+    name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
+    if [[ "$name" == *"C64Ethernet_M1_2N_legacy_capture"* ]]; then
+      WINDOW="$id"
+      break 2
+    fi
+  done
   if ! kill -0 "$EESCHEMA_PID" 2>/dev/null; then
-    echo "Eeschema exited before a window appeared" >&2
+    echo "Eeschema exited before the schematic editor appeared" >&2
     cat "$LOG" >&2 || true
     exit 1
   fi
@@ -50,20 +76,24 @@ for _ in $(seq 1 60); do
 done
 
 if [[ -z "$WINDOW" ]]; then
-  echo "Eeschema window did not appear" >&2
+  echo "Eeschema schematic editor did not appear" >&2
+  echo "visible Eeschema windows:" >&2
+  for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do
+    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true)" >&2
+  done
   cat "$LOG" >&2 || true
   exit 1
 fi
 
-echo "Eeschema window: $WINDOW ($(xdotool getwindowname "$WINDOW" 2>/dev/null || echo unknown))" | tee -a "$LOG"
+echo "Eeschema schematic window: $WINDOW ($(xdotool getwindowname "$WINDOW" 2>/dev/null || echo unknown))" | tee -a "$LOG"
 
-# Send Ctrl+S directly to the Eeschema window. This works under bare Xvfb and
-# avoids the _NET_ACTIVE_WINDOW dependency that broke the previous workflow.
+# Send Ctrl+S directly to the actual schematic editor window. This works under
+# bare Xvfb and avoids the _NET_ACTIVE_WINDOW dependency.
 xdotool key --window "$WINDOW" --clearmodifiers ctrl+s
 
 # Give KiCad time to convert and write the native schematic. Some versions
 # create the native file under the legacy basename first.
-for _ in $(seq 1 20); do
+for _ in $(seq 1 30); do
   if [[ -f "$NATIVE" || -f "$ALT" ]]; then
     break
   fi
@@ -89,6 +119,10 @@ fi
 # symbol library section. The project validation script performs deeper checks.
 grep -q '^(kicad_sch ' "$NATIVE" || {
   echo "output is not a native KiCad schematic" >&2
+  exit 1
+}
+grep -q '(lib_symbols' "$NATIVE" || {
+  echo "native schematic has no embedded symbol library" >&2
   exit 1
 }
 

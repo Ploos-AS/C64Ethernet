@@ -1,0 +1,193 @@
+EESchema Schematic File Version 4
+LIBS:C64Ethernet_M1_2N_legacy_capture-cache
+EELAYER 29 0
+EELAYER END
+$Descr A4 11693 8268
+Sheet 1 1
+Title "C64Ethernet M1.2N engineering capture"
+Date "2026-09-15"
+Rev "M1.2N"
+Comp "Ploos-AS"
+Comment1 "Legacy capture prepared for KiCad migration"
+Comment2 "C64 User Port -> LC4032V -> W5500 -> Ethernet"
+Comment3 "Not ERC qualified"
+Comment4 "Do not manufacture from this revision"
+$EndDescr
+Text Notes 900 900 0 100 ~ 20
+C64 USER PORT
+Text Notes 4050 900 0 100 ~ 20
+LC4032V-5TN48C CPLD
+Text Notes 7600 900 0 100 ~ 20
+W5500 ETHERNET
+Text Notes 900 6750 0 60 ~ 12
+M1.2N capture: symbolized engineering source for migration to native .kicad_sch.
+$Comp
+L C64_USERPORT J1
+U 1 1 10000001
+P 1800 3500
+F 0 "J1" H 1800 4550 50  0000 C CNN
+F 1 "C64_USERPORT" H 1800 4450 50 0000 C CNN
+	1    1800 3500
+	1 0 0 -1
+$EndComp
+$Comp
+L LC4032V-5TN48C U1
+U 1 1 10000002
+P 4700 3500
+F 0 "U1" H 4700 4750 50 0000 C CNN
+F 1 "LC4032V-5TN48C" H 4700 4650 50 0000 C CNN
+	1    4700 3500
+	1 0 0 -1
+$EndComp
+$Comp
+L W5500 U2
+U 1 1 10000003
+P 7700 3500
+F 0 "U2" H 7700 4750 50 0000 C CNN
+F 1 "W5500" H 7700 4650 50 0000 C CNN
+	1    7700 3500
+	1 0 0 -1
+$EndComp
+$Comp
+L RJ45_MAGJACK J2
+U 1 1 10000004
+P 10100 3500
+F 0 "J2" H 10100 4150 50 0000 C CNN
+F 1 "RJ45_MAGJACK" H 10100 4050 50 0000 C CNN
+	1    10100 3500
+	1 0 0 -1
+$EndComp
+$Comp
+L REG_3V3 U3
+U 1 1 10000005
+P 4700 5600
+F 0 "U3" H 4700 5950 50 0000 C CNN
+F 1 "REG_3V3" H 4700 5850 50 0000 C CNN
+	1    4700 5600
+	1 0 0 -1
+$EndComp
+$Comp
+L R R1
+U 1 1 10000006
+P 6800 5400
+F 0 "R1" V 6700 5400 50 0000 C CNN
+F 1 "12.4k 1%" V 6800 5400 50 0000 C CNN
+	1    6800 5400
+	0 1 1 0
+$EndComp
+$Comp
+L CRYSTAL X1
+U 1 1 10000007
+P 7600 5400
+F 0 "X1" H 7600 5700 50 0000 C CNN
+F 1 "25MHz" H 7600 5600 50 0000 C CNN
+	1    7600 5400
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	2300 3000 4000 3000
+Wire Wire Line
+	2300 3100 4000 3100
+Wire Wire Line
+	2300 3200 4000 3200
+Wire Wire Line
+	2300 3300 4000 3300
+Wire Wire Line
+	2300 3400 4000 3400
+Wire Wire Line
+	2300 3500 4000 3500
+Wire Wire Line
+	2300 3600 4000 3600
+Wire Wire Line
+	2300 3700 4000 3700
+Wire Wire Line
+	2300 3900 4000 3900
+Wire Wire Line
+	5400 3000 7000 3000
+Wire Wire Line
+	5400 3100 7000 3100
+Wire Wire Line
+	5400 3200 7000 3200
+Wire Wire Line
+	5400 3300 7000 3300
+Wire Wire Line
+	5400 3400 7000 3400
+Wire Wire Line
+	5400 3500 7000 3500
+Wire Wire Line
+	5400 3600 7000 3600
+Wire Wire Line
+	5400 3700 7000 3700
+Wire Wire Line
+	8400 3000 9700 3000
+Wire Wire Line
+	8400 3100 9700 3100
+Wire Wire Line
+	8400 3200 9700 3200
+Wire Wire Line
+	8400 3300 9700 3300
+Wire Wire Line
+	8400 3400 9700 3400
+Wire Wire Line
+	8400 3500 9700 3500
+Wire Wire Line
+	8400 3600 9700 3600
+Wire Wire Line
+	8400 3700 9700 3700
+Wire Wire Line
+	4400 5600 4200 5600
+Wire Wire Line
+	5000 5600 5200 5600
+Wire Wire Line
+	6650 5400 6500 5400
+Wire Wire Line
+	6950 5400 7450 5400
+Wire Wire Line
+	7750 5400 7900 5400
+Text Label 2400 3000 0 50 ~ 0
+PB0
+Text Label 2400 3100 0 50 ~ 0
+PB1
+Text Label 2400 3200 0 50 ~ 0
+PB2
+Text Label 2400 3300 0 50 ~ 0
+PB3
+Text Label 2400 3400 0 50 ~ 0
+PB4
+Text Label 2400 3500 0 50 ~ 0
+PB5
+Text Label 2400 3600 0 50 ~ 0
+PB6
+Text Label 2400 3700 0 50 ~ 0
+PB7
+Text Label 2400 3900 0 50 ~ 0
+PA2_HOST_STROBE
+Text Label 5450 3000 0 50 ~ 0
+SCLK
+Text Label 5450 3100 0 50 ~ 0
+MOSI
+Text Label 5450 3200 0 50 ~ 0
+MISO
+Text Label 5450 3300 0 50 ~ 0
+SCSn
+Text Label 5450 3400 0 50 ~ 0
+INTn
+Text Label 5450 3500 0 50 ~ 0
+RSTn
+Text Label 5450 3600 0 50 ~ 0
+3V3
+Text Label 5450 3700 0 50 ~ 0
+GND
+Text Label 8500 3000 0 50 ~ 0
+TXP
+Text Label 8500 3100 0 50 ~ 0
+TXN
+Text Label 8500 3200 0 50 ~ 0
+RXP
+Text Label 8500 3300 0 50 ~ 0
+RXN
+Text Label 6500 5400 2 50 ~ 0
+EXRES1
+Text Label 7900 5400 0 50 ~ 0
+OSC_RETURN
+$EndSCHEMATC

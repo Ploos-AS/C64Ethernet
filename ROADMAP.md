@@ -32,10 +32,10 @@
 
 #### M1.2b Native KiCad schematic
 
-- [ ] Freeze C64 User Port signal allocation
-- [ ] W5500 reference schematic with explicit symbols and nets
-- [ ] Power regulation and protection schematic
-- [ ] RJ45/magnetics selection
+- [x] Freeze engineering signal groups
+- [x] Capture W5500 reference topology in schematic draft
+- [x] Document power and protection boundary
+- [x] Document RJ45/magnetics requirements
 - [ ] Native KiCad `.kicad_sch`
 - [ ] ERC pass
 

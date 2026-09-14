@@ -23,6 +23,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y kicad xvfb xdotool
+          chmod +x tools/ci/migrate_kicad_legacy.sh
 
       - name: Migrate legacy schematic
         run: tools/ci/migrate_kicad_legacy.sh

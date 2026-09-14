@@ -37,7 +37,7 @@
 - [x] Document power and protection boundary
 - [x] Document RJ45/magnetics requirements
 - [x] Freeze electrical netlist baseline
-- [ ] Select C64-to-W5500 bridge implementation
+- [x] Select C64-to-W5500 bridge implementation: CPLD
 - [ ] Native KiCad `.kicad_sch` with real symbols/nets
 - [ ] ERC pass
 
@@ -50,7 +50,7 @@
 ## M2 — C64 bus/controller protocol
 
 - [ ] Define command/register protocol
-- [ ] Implement controller-side protocol
+- [ ] Implement CPLD controller-side protocol
 - [ ] Implement C64-side low-level driver
 - [ ] Host-side protocol tests
 - [ ] Error and reset handling

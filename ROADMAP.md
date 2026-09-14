@@ -21,12 +21,28 @@
 
 ### M1.2 Schematic and PCB
 
-- [ ] C64 User Port electrical interface specification
-- [ ] W5500 schematic
+#### M1.2a Engineering schematic draft
+
+- [x] Record C64 User Port electrical allocation
+- [x] Record 5 V input and 3.3 V controller power boundary
+- [x] Record W5500 SPI/control interface boundary
+- [x] Record Ethernet PHY/magnetics/RJ45 topology
+- [x] Add initial KiCad-compatible engineering schematic draft
+- [x] Document hardware-design exit criteria
+
+#### M1.2b Native KiCad schematic
+
+- [ ] Freeze C64 User Port signal allocation
+- [ ] W5500 reference schematic with explicit symbols and nets
 - [ ] Power regulation and protection schematic
 - [ ] RJ45/magnetics selection
+- [ ] Native KiCad `.kicad_sch`
+- [ ] ERC pass
+
+#### M1.2c PCB
+
 - [ ] KiCad PCB layout
-- [ ] ERC/DRC checks
+- [ ] DRC pass
 - [ ] Manufacturing outputs
 
 ## M2 — C64 bus/controller protocol

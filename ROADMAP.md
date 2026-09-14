@@ -36,7 +36,9 @@
 - [x] Capture W5500 reference topology in schematic draft
 - [x] Document power and protection boundary
 - [x] Document RJ45/magnetics requirements
-- [ ] Native KiCad `.kicad_sch`
+- [x] Freeze electrical netlist baseline
+- [ ] Select C64-to-W5500 bridge implementation
+- [ ] Native KiCad `.kicad_sch` with real symbols/nets
 - [ ] ERC pass
 
 #### M1.2c PCB

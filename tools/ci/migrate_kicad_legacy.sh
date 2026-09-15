@@ -62,17 +62,13 @@ echo "Open dialog: $DIALOG ($(xdotool getwindowname "$DIALOG" 2>/dev/null || tru
 xdotool windowfocus --sync "$DIALOG"; xdotool key --clearmodifiers ctrl+a; xdotool type --clearmodifiers --delay 1 "$LEGACY"; xdotool key --clearmodifiers Return; sleep 3
 if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then xdotool windowfocus --sync "$DIALOG" 2>/dev/null || true; xdotool key --clearmodifiers slash; sleep 1; xdotool type --clearmodifiers --delay 1 "${LEGACY#/}"; xdotool key --clearmodifiers Return; fi
 
-# Activate a KiCad migration modal's affirmative action.  KiCad 9's Remap
-# Symbols is not a dismissible warning: Escape/Alt-F4 are intentionally ignored.
-# First use the mnemonic, then keyboard traversal, finally click the conventional
-# lower-right action-button area.  Stop as soon as the modal disappears.
 activate_modal(){
   local title="$1" id geom x y w h
   id="$(xdotool search --onlyvisible --name "^${title}$" 2>/dev/null | tail -n1 || true)"
   [[ -n "$id" ]] || return 0
   echo "Activating migration dialog: $id ($title)" | tee -a "$LOG"
   xdotool windowfocus --sync "$id" 2>/dev/null || true
-  if [[ "$title" == "Remap Symbols" ]]; then xdotool key --clearmodifiers alt+r 2>/dev/null || true; else xdotool key --clearmodifiers alt+r 2>/dev/null || true; fi
+  xdotool key --clearmodifiers alt+r 2>/dev/null || true
   sleep 2
   xdotool search --onlyvisible --name "^${title}$" >/dev/null 2>&1 || return 0
   xdotool key --clearmodifiers Home 2>/dev/null || true
@@ -122,17 +118,49 @@ xdotool windowfocus --sync "$WINDOW"; sleep 1
 FOCUSED="$(xdotool getwindowfocus 2>/dev/null || true)"
 [[ "$FOCUSED" == "$WINDOW" ]] || { echo "editor did not acquire focus before Save As: wanted $WINDOW got $FOCUSED" >&2; exit 1; }
 echo "Editor focused for Save As: $WINDOW" | tee -a "$LOG"
-xdotool key --window "$WINDOW" --clearmodifiers ctrl+shift+s; sleep 2
+
+# KiCad 9 does not bind Ctrl+Shift+S to Save As in eeschema. Drive the File
+# menu instead: Alt+F opens File, then 'a' selects Save As in the English UI.
+# If the mnemonic differs, use keyboard traversal from the top of File as a
+# fallback and stop as soon as a save dialog appears.
+open_save_as(){
+  local i
+  xdotool windowfocus --sync "$WINDOW" 2>/dev/null || true
+  xdotool key --clearmodifiers alt+f; sleep 1
+  xdotool key --clearmodifiers a; sleep 2
+  xdotool search --onlyvisible --name '.*Save.*' >/dev/null 2>&1 && return 0
+  xdotool key --clearmodifiers Escape 2>/dev/null || true
+  for i in $(seq 1 12); do
+    xdotool windowfocus --sync "$WINDOW" 2>/dev/null || true
+    xdotool key --clearmodifiers alt+f; sleep 1
+    xdotool key --clearmodifiers Home; xdotool key --clearmodifiers Down
+    for _down in $(seq 1 "$i"); do xdotool key --clearmodifiers Down; done
+    xdotool key --clearmodifiers Return; sleep 2
+    xdotool search --onlyvisible --name '.*Save.*' >/dev/null 2>&1 && return 0
+    xdotool key --clearmodifiers Escape 2>/dev/null || true
+  done
+  return 1
+}
+open_save_as || true
 
 SAVE=""
-for _ in $(seq 1 30); do
-  while read -r id; do [[ -n "$id" ]] || continue; name="$(xdotool getwindowname "$id" 2>/dev/null || true)"; case "$name" in "Save Schematic As"|"Save As"|"Save File"|"Save") SAVE="$id"; break;; esac; done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
+for _ in $(seq 1 15); do
+  while read -r id; do
+    [[ -n "$id" && "$id" != "$WINDOW" ]] || continue
+    name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
+    case "$name" in *"Save"*|*"save"*) SAVE="$id"; break;; esac
+  done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
   [[ -z "$SAVE" ]] || break; sleep 1
 done
 if [[ -n "$SAVE" ]]; then
-  echo "Save dialog: $SAVE ($(xdotool getwindowname "$SAVE" 2>/dev/null || true))" | tee -a "$LOG"; xdotool windowfocus --sync "$SAVE" 2>/dev/null || true; xdotool key --clearmodifiers slash 2>/dev/null || true; sleep 1; xdotool type --clearmodifiers --delay 1 "$NATIVE"; xdotool key --clearmodifiers Return; sleep 2; if xdotool search --onlyvisible --name '^(Save Schematic As|Save As|Save File|Save)$' >/dev/null 2>&1; then xdotool key --clearmodifiers Return 2>/dev/null || true; fi
+  echo "Save dialog: $SAVE ($(xdotool getwindowname "$SAVE" 2>/dev/null || true))" | tee -a "$LOG"
+  xdotool windowfocus --sync "$SAVE" 2>/dev/null || true
+  xdotool key --clearmodifiers slash 2>/dev/null || true; sleep 1
+  xdotool type --clearmodifiers --delay 1 "$NATIVE"
+  xdotool key --clearmodifiers Return; sleep 2
+  if xdotool search --onlyvisible --name '.*Save.*' >/dev/null 2>&1; then xdotool key --clearmodifiers Return 2>/dev/null || true; fi
 else
-  echo "Save As dialog did not appear; falling back to Ctrl+S" | tee -a "$LOG"; xdotool windowfocus --sync "$WINDOW" 2>/dev/null || true; xdotool key --clearmodifiers ctrl+s
+  echo "File -> Save As dialog did not appear" | tee -a "$LOG"
 fi
 for _ in $(seq 1 20); do
   [[ ! -f "$NATIVE" && ! -f "$ALT" ]] || break
@@ -142,7 +170,12 @@ for _ in $(seq 1 20); do
 done
 xdotool key --clearmodifiers alt+F4 2>/dev/null || true; sleep 2
 [[ ! -f "$NATIVE" && -f "$ALT" ]] && mv "$ALT" "$NATIVE"
-if [[ ! -f "$NATIVE" ]]; then echo "legacy migration did not produce $NATIVE" >&2; cat "$LOG" >&2 || true; cat /tmp/c64ethernet-xvfb.log >&2 || true; exit 1; fi
+if [[ ! -f "$NATIVE" ]]; then
+  echo "legacy migration did not produce $NATIVE" >&2
+  echo "visible windows:" >&2
+  xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true)" >&2; done
+  cat "$LOG" >&2 || true; cat /tmp/c64ethernet-xvfb.log >&2 || true; exit 1
+fi
 grep -q '^(kicad_sch ' "$NATIVE" || { echo "output is not a native KiCad schematic" >&2; exit 1; }
 grep -q '(lib_symbols' "$NATIVE" || { echo "native schematic has no embedded symbol library" >&2; exit 1; }
 cp "$NATIVE" "$ROOT/build/kicad/C64Ethernet-migrated.kicad_sch"

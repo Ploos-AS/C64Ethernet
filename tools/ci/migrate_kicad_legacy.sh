@@ -78,9 +78,6 @@ echo "Eeschema editor: $EDITOR ($(xdotool getwindowname "$EDITOR" 2>/dev/null ||
 xdotool key --window "$EDITOR" --clearmodifiers ctrl+o
 sleep 2
 
-# xdotool --name uses a regex dialect where the old alternation expression
-# was not matching KiCad's literal "Open Schematic" title on the runner.
-# Enumerate visible windows and inspect their actual titles instead.
 DIALOG=""
 for _ in $(seq 1 30); do
   while read -r id; do
@@ -108,10 +105,18 @@ if [[ -z "$DIALOG" ]]; then
 fi
 
 echo "Open dialog: $DIALOG ($(xdotool getwindowname "$DIALOG" 2>/dev/null || true))" | tee -a "$LOG"
-xdotool key --window "$DIALOG" --clearmodifiers ctrl+l
+
+# Bare Xvfb has no window manager, so --window keyboard injection can leave
+# GTK's input focus at PointerRoot. First focus the dialog explicitly, then
+# let GTK move focus to its location-entry child with Ctrl+L. Subsequent keys
+# go to the currently focused child rather than being forced at the toplevel.
+xdotool windowfocus --sync "$DIALOG"
+xdotool key --clearmodifiers ctrl+l
 sleep 1
-xdotool type --window "$DIALOG" --clearmodifiers --delay 1 "$LEGACY"
-xdotool key --window "$DIALOG" Return
+FOCUSED="$(xdotool getwindowfocus 2>/dev/null || true)"
+echo "Open dialog focused child after Ctrl+L: ${FOCUSED:-unknown}" | tee -a "$LOG"
+xdotool type --clearmodifiers --delay 1 "$LEGACY"
+xdotool key --clearmodifiers Return
 
 WINDOW=""
 for _ in $(seq 1 60); do
@@ -136,7 +141,8 @@ if [[ -z "$WINDOW" ]]; then
 fi
 
 echo "Loaded legacy schematic: $WINDOW ($(xdotool getwindowname "$WINDOW" 2>/dev/null || true))" | tee -a "$LOG"
-xdotool key --window "$WINDOW" --clearmodifiers ctrl+s
+xdotool windowfocus --sync "$WINDOW"
+xdotool key --clearmodifiers ctrl+s
 
 for _ in $(seq 1 30); do
   if [[ -f "$NATIVE" || -f "$ALT" ]]; then
@@ -145,7 +151,7 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-xdotool key --window "$WINDOW" --clearmodifiers alt+F4 2>/dev/null || true
+xdotool key --clearmodifiers alt+F4 2>/dev/null || true
 sleep 2
 
 if [[ ! -f "$NATIVE" && -f "$ALT" ]]; then

@@ -19,10 +19,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install KiCad and headless GUI helpers
+      - name: Install KiCad 9 and headless GUI helpers
         run: |
+          sudo add-apt-repository --yes ppa:kicad/kicad-9.0-releases
           sudo apt-get update
           sudo apt-get install -y kicad xvfb xdotool
+          kicad-cli version
           chmod +x tools/ci/migrate_kicad_legacy.sh
 
       - name: Migrate legacy schematic
@@ -32,9 +34,9 @@ jobs:
         run: |
           mkdir -p build/kicad
           kicad-cli sch erc \
-            --format json \
+            --exit-code-violations \
             --severity-all \
-            --output build/kicad/C64Ethernet-erc.json \
+            --output build/kicad/C64Ethernet-erc.rpt \
             hardware/kicad/C64Ethernet.kicad_sch
 
       - name: Upload KiCad validation report

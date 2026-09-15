@@ -101,18 +101,12 @@ if [[ -z "$DIALOG" ]]; then
 fi
 
 echo "Open dialog: $DIALOG ($(xdotool getwindowname "$DIALOG" 2>/dev/null || true))" | tee -a "$LOG"
-
-# GTK's Ctrl+L location entry is unreliable under bare Xvfb.  The chooser's
-# filename field accepts an absolute path when it has focus.  Use keyboard
-# traversal from the dialog itself, and try the two stable GTK entry routes.
 xdotool windowfocus --sync "$DIALOG"
 xdotool key --clearmodifiers ctrl+a
 xdotool type --clearmodifiers --delay 1 "$LEGACY"
 xdotool key --clearmodifiers Return
 sleep 3
 
-# If the first route did not close the chooser, use '/' which opens GTK's
-# location entry without relying on Ctrl+L/focus-child discovery.
 if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then
   xdotool windowfocus --sync "$DIALOG" 2>/dev/null || true
   xdotool key --clearmodifiers slash
@@ -121,8 +115,39 @@ if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then
   xdotool key --clearmodifiers Return
 fi
 
-WINDOW=""
+# KiCad 7 opens a modal Remap Symbols dialog when importing old .sch files.
+# Accept the automatic remap so loading can finish.  Tab/Return is used rather
+# than coordinates to keep this independent of runner DPI/theme.
 for _ in $(seq 1 60); do
+  REMAP="$(xdotool search --onlyvisible --name '^Remap Symbols$' 2>/dev/null | tail -n1 || true)"
+  if [[ -n "$REMAP" ]]; then
+    echo "Remap dialog: $REMAP" | tee -a "$LOG"
+    xdotool windowfocus --sync "$REMAP" 2>/dev/null || true
+    # Default action is normally Remap Symbols. Try Return first; if the
+    # dialog remains, traverse controls until the affirmative button fires.
+    xdotool key --clearmodifiers Return 2>/dev/null || true
+    sleep 2
+    if xdotool search --onlyvisible --name '^Remap Symbols$' >/dev/null 2>&1; then
+      for _tab in $(seq 1 12); do
+        xdotool key --clearmodifiers Tab
+        xdotool key --clearmodifiers Return
+        sleep 1
+        if ! xdotool search --onlyvisible --name '^Remap Symbols$' >/dev/null 2>&1; then
+          break
+        fi
+      done
+    fi
+    break
+  fi
+  # If the editor title already changed, no remap dialog needs handling.
+  if xdotool search --onlyvisible --name '.*C64Ethernet_M1_2N_legacy_capture.*' >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+WINDOW=""
+for _ in $(seq 1 90); do
   for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do
     name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
     if [[ "$name" == *"C64Ethernet_M1_2N_legacy_capture"* ]]; then

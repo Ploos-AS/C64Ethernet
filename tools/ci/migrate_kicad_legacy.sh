@@ -97,26 +97,29 @@ done
 
 if [[ -z "$DIALOG" ]]; then
   echo "open-file dialog did not appear" >&2
-  echo "visible windows:" >&2
-  xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do
-    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true)" >&2
-  done
   exit 1
 fi
 
 echo "Open dialog: $DIALOG ($(xdotool getwindowname "$DIALOG" 2>/dev/null || true))" | tee -a "$LOG"
 
-# Bare Xvfb has no window manager, so --window keyboard injection can leave
-# GTK's input focus at PointerRoot. First focus the dialog explicitly, then
-# let GTK move focus to its location-entry child with Ctrl+L. Subsequent keys
-# go to the currently focused child rather than being forced at the toplevel.
+# GTK's Ctrl+L location entry is unreliable under bare Xvfb.  The chooser's
+# filename field accepts an absolute path when it has focus.  Use keyboard
+# traversal from the dialog itself, and try the two stable GTK entry routes.
 xdotool windowfocus --sync "$DIALOG"
-xdotool key --clearmodifiers ctrl+l
-sleep 1
-FOCUSED="$(xdotool getwindowfocus 2>/dev/null || true)"
-echo "Open dialog focused child after Ctrl+L: ${FOCUSED:-unknown}" | tee -a "$LOG"
+xdotool key --clearmodifiers ctrl+a
 xdotool type --clearmodifiers --delay 1 "$LEGACY"
 xdotool key --clearmodifiers Return
+sleep 3
+
+# If the first route did not close the chooser, use '/' which opens GTK's
+# location entry without relying on Ctrl+L/focus-child discovery.
+if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then
+  xdotool windowfocus --sync "$DIALOG" 2>/dev/null || true
+  xdotool key --clearmodifiers slash
+  sleep 1
+  xdotool type --clearmodifiers --delay 1 "${LEGACY#/}"
+  xdotool key --clearmodifiers Return
+fi
 
 WINDOW=""
 for _ in $(seq 1 60); do
@@ -132,8 +135,8 @@ done
 
 if [[ -z "$WINDOW" ]]; then
   echo "legacy schematic did not load" >&2
-  echo "visible Eeschema windows:" >&2
-  for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do
+  echo "visible windows:" >&2
+  xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do
     echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true)" >&2
   done
   cat "$LOG" >&2 || true
@@ -165,13 +168,8 @@ if [[ ! -f "$NATIVE" ]]; then
   exit 1
 fi
 
-grep -q '^(kicad_sch ' "$NATIVE" || {
-  echo "output is not a native KiCad schematic" >&2
-  exit 1
-}
-grep -q '(lib_symbols' "$NATIVE" || {
-  echo "native schematic has no embedded symbol library" >&2
-  exit 1
-}
+grep -q '^(kicad_sch ' "$NATIVE" || { echo "output is not a native KiCad schematic" >&2; exit 1; }
+grep -q '(lib_symbols' "$NATIVE" || { echo "native schematic has no embedded symbol library" >&2; exit 1; }
 
+cp "$NATIVE" "$ROOT/build/kicad/C64Ethernet-migrated.kicad_sch"
 echo "KiCad legacy migration produced: $NATIVE"

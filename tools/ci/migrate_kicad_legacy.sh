@@ -116,10 +116,6 @@ if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then
   xdotool key --clearmodifiers Return
 fi
 
-# Handle modal dialogs emitted while importing old-format schematics.  KiCad 9
-# can show Remap Symbols followed by Project Rescue Helper before the editor is
-# usable.  Accept the default migration/rescue actions and keep watching until
-# the legacy schematic reaches the editor.
 for _ in $(seq 1 120); do
   REMAP="$(xdotool search --onlyvisible --name '^Remap Symbols$' 2>/dev/null | tail -n1 || true)"
   if [[ -n "$REMAP" ]]; then
@@ -132,9 +128,7 @@ for _ in $(seq 1 120); do
         xdotool key --clearmodifiers Tab
         xdotool key --clearmodifiers Return
         sleep 1
-        if ! xdotool search --onlyvisible --name '^Remap Symbols$' >/dev/null 2>&1; then
-          break
-        fi
+        if ! xdotool search --onlyvisible --name '^Remap Symbols$' >/dev/null 2>&1; then break; fi
       done
     fi
   fi
@@ -143,8 +137,6 @@ for _ in $(seq 1 120); do
   if [[ -n "$RESCUE" ]]; then
     echo "Project Rescue Helper: $RESCUE" | tee -a "$LOG"
     xdotool windowfocus --sync "$RESCUE" 2>/dev/null || true
-    # Prefer the dialog's default affirmative action.  If focus lands on a
-    # non-action widget, walk the controls until the modal closes.
     xdotool key --clearmodifiers Return 2>/dev/null || true
     sleep 2
     if xdotool search --onlyvisible --name '^Project Rescue Helper$' >/dev/null 2>&1; then
@@ -152,16 +144,12 @@ for _ in $(seq 1 120); do
         xdotool key --clearmodifiers Tab 2>/dev/null || true
         xdotool key --clearmodifiers Return 2>/dev/null || true
         sleep 1
-        if ! xdotool search --onlyvisible --name '^Project Rescue Helper$' >/dev/null 2>&1; then
-          break
-        fi
+        if ! xdotool search --onlyvisible --name '^Project Rescue Helper$' >/dev/null 2>&1; then break; fi
       done
     fi
   fi
 
-  if xdotool search --onlyvisible --name '.*C64Ethernet_M1_2N_legacy_capture.*' >/dev/null 2>&1; then
-    break
-  fi
+  if xdotool search --onlyvisible --name '.*C64Ethernet_M1_2N_legacy_capture.*' >/dev/null 2>&1; then break; fi
   sleep 1
 done
 
@@ -170,10 +158,7 @@ for _ in $(seq 1 90); do
   while read -r id; do
     [[ -n "$id" ]] || continue
     name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
-    if [[ "$name" == *"C64Ethernet_M1_2N_legacy_capture"* ]]; then
-      WINDOW="$id"
-      break
-    fi
+    if [[ "$name" == *"C64Ethernet_M1_2N_legacy_capture"* ]]; then WINDOW="$id"; break; fi
   done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
   [[ -n "$WINDOW" ]] && break
   sleep 1
@@ -191,11 +176,53 @@ fi
 
 echo "Loaded legacy schematic: $WINDOW ($(xdotool getwindowname "$WINDOW" 2>/dev/null || true))" | tee -a "$LOG"
 xdotool windowfocus --sync "$WINDOW"
-xdotool key --clearmodifiers ctrl+s
+xdotool key --clearmodifiers ctrl+shift+s
+sleep 2
 
+# KiCad 9 converts a legacy .sch through Save As.  Drive the native chooser
+# explicitly instead of relying on Ctrl+S, which can leave the converted file
+# under an implicit legacy-derived name or wait on an unseen chooser.
+SAVE=""
 for _ in $(seq 1 30); do
-  if [[ -f "$NATIVE" || -f "$ALT" ]]; then
-    break
+  while read -r id; do
+    [[ -n "$id" ]] || continue
+    name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
+    case "$name" in
+      "Save Schematic As"|"Save As"|"Save File"|"Save") SAVE="$id"; break ;;
+    esac
+  done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
+  [[ -n "$SAVE" ]] && break
+  sleep 1
+done
+
+if [[ -n "$SAVE" ]]; then
+  echo "Save dialog: $SAVE ($(xdotool getwindowname "$SAVE" 2>/dev/null || true))" | tee -a "$LOG"
+  xdotool windowfocus --sync "$SAVE" 2>/dev/null || true
+  # GTK/wx file chooser: '/' opens the location entry.  Enter the complete
+  # destination so directory and basename are both deterministic.
+  xdotool key --clearmodifiers slash 2>/dev/null || true
+  sleep 1
+  xdotool type --clearmodifiers --delay 1 "$NATIVE"
+  xdotool key --clearmodifiers Return
+  sleep 2
+  # Some chooser variants use the first Return only to accept the location.
+  if xdotool search --onlyvisible --name '^(Save Schematic As|Save As|Save File|Save)$' >/dev/null 2>&1; then
+    xdotool key --clearmodifiers Return 2>/dev/null || true
+  fi
+else
+  echo "Save As dialog did not appear; falling back to Ctrl+S" | tee -a "$LOG"
+  xdotool windowfocus --sync "$WINDOW" 2>/dev/null || true
+  xdotool key --clearmodifiers ctrl+s
+fi
+
+# Accept an overwrite/format confirmation if KiCad presents one.
+for _ in $(seq 1 20); do
+  if [[ -f "$NATIVE" || -f "$ALT" ]]; then break; fi
+  CONFIRM="$(xdotool search --onlyvisible --name '^(Confirm Save As|Confirm|Warning)$' 2>/dev/null | tail -n1 || true)"
+  if [[ -n "$CONFIRM" ]]; then
+    echo "Save confirmation: $CONFIRM ($(xdotool getwindowname "$CONFIRM" 2>/dev/null || true))" | tee -a "$LOG"
+    xdotool windowfocus --sync "$CONFIRM" 2>/dev/null || true
+    xdotool key --clearmodifiers Return 2>/dev/null || true
   fi
   sleep 1
 done
@@ -203,12 +230,14 @@ done
 xdotool key --clearmodifiers alt+F4 2>/dev/null || true
 sleep 2
 
-if [[ ! -f "$NATIVE" && -f "$ALT" ]]; then
-  mv "$ALT" "$NATIVE"
-fi
+if [[ ! -f "$NATIVE" && -f "$ALT" ]]; then mv "$ALT" "$NATIVE"; fi
 
 if [[ ! -f "$NATIVE" ]]; then
   echo "legacy migration did not produce $NATIVE" >&2
+  echo "visible windows at save failure:" >&2
+  xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do
+    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true)" >&2
+  done
   cat "$LOG" >&2 || true
   cat /tmp/c64ethernet-xvfb.log >&2 || true
   exit 1

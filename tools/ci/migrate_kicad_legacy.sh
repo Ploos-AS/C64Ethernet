@@ -52,8 +52,6 @@ rm -f "$NATIVE" "$ALT"
 eeschema >"$LOG" 2>&1 &
 EESCHEMA_PID=$!
 
-# KiCad releases have changed the X11 WM_CLASS used by eeschema.  Detect the
-# editor primarily by its title and only use the class as a compatibility hint.
 EDITOR=""
 for _ in $(seq 1 60); do
   while read -r id; do
@@ -76,10 +74,6 @@ done
 
 if [[ -z "$EDITOR" ]]; then
   echo "Eeschema editor did not appear" >&2
-  echo "visible windows:" >&2
-  xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do
-    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true) / $(xprop -id "$id" WM_CLASS 2>/dev/null || true)" >&2
-  done
   cat "$LOG" >&2 || true
   exit 1
 fi
@@ -95,10 +89,7 @@ for _ in $(seq 1 30); do
     [[ "$id" != "$EDITOR" ]] || continue
     name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
     case "$name" in
-      "Open Schematic"|"Open File"|"Open")
-        DIALOG="$id"
-        break
-        ;;
+      "Open Schematic"|"Open File"|"Open") DIALOG="$id"; break ;;
     esac
   done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
   [[ -n "$DIALOG" ]] && break
@@ -125,7 +116,11 @@ if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then
   xdotool key --clearmodifiers Return
 fi
 
-for _ in $(seq 1 60); do
+# Handle modal dialogs emitted while importing old-format schematics.  KiCad 9
+# can show Remap Symbols followed by Project Rescue Helper before the editor is
+# usable.  Accept the default migration/rescue actions and keep watching until
+# the legacy schematic reaches the editor.
+for _ in $(seq 1 120); do
   REMAP="$(xdotool search --onlyvisible --name '^Remap Symbols$' 2>/dev/null | tail -n1 || true)"
   if [[ -n "$REMAP" ]]; then
     echo "Remap dialog: $REMAP" | tee -a "$LOG"
@@ -142,8 +137,28 @@ for _ in $(seq 1 60); do
         fi
       done
     fi
-    break
   fi
+
+  RESCUE="$(xdotool search --onlyvisible --name '^Project Rescue Helper$' 2>/dev/null | tail -n1 || true)"
+  if [[ -n "$RESCUE" ]]; then
+    echo "Project Rescue Helper: $RESCUE" | tee -a "$LOG"
+    xdotool windowfocus --sync "$RESCUE" 2>/dev/null || true
+    # Prefer the dialog's default affirmative action.  If focus lands on a
+    # non-action widget, walk the controls until the modal closes.
+    xdotool key --clearmodifiers Return 2>/dev/null || true
+    sleep 2
+    if xdotool search --onlyvisible --name '^Project Rescue Helper$' >/dev/null 2>&1; then
+      for _tab in $(seq 1 16); do
+        xdotool key --clearmodifiers Tab 2>/dev/null || true
+        xdotool key --clearmodifiers Return 2>/dev/null || true
+        sleep 1
+        if ! xdotool search --onlyvisible --name '^Project Rescue Helper$' >/dev/null 2>&1; then
+          break
+        fi
+      done
+    fi
+  fi
+
   if xdotool search --onlyvisible --name '.*C64Ethernet_M1_2N_legacy_capture.*' >/dev/null 2>&1; then
     break
   fi

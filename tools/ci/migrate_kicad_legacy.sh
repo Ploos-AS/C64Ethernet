@@ -48,9 +48,6 @@ sleep 2
 
 rm -f "$NATIVE" "$ALT"
 
-# On Ubuntu's KiCad 7 build, passing a legacy .sch on the command line can
-# leave Eeschema at "[no schematic loaded]". Start the editor and explicitly
-# open the legacy file through the normal File/Open dialog instead.
 eeschema >"$LOG" 2>&1 &
 EESCHEMA_PID=$!
 
@@ -78,20 +75,26 @@ if [[ -z "$EDITOR" ]]; then
 fi
 
 echo "Eeschema editor: $EDITOR ($(xdotool getwindowname "$EDITOR" 2>/dev/null || true))" | tee -a "$LOG"
-
-# Ctrl+O opens the GTK file chooser. Type the absolute filename via the
-# chooser's location entry (Ctrl+L), then confirm it.
 xdotool key --window "$EDITOR" --clearmodifiers ctrl+o
 sleep 2
 
+# xdotool --name uses a regex dialect where the old alternation expression
+# was not matching KiCad's literal "Open Schematic" title on the runner.
+# Enumerate visible windows and inspect their actual titles instead.
 DIALOG=""
 for _ in $(seq 1 30); do
-  for id in $(xdotool search --onlyvisible --name 'Open.*Schematic\|Open.*File\|Open' 2>/dev/null || true); do
-    if [[ "$id" != "$EDITOR" ]]; then
-      DIALOG="$id"
-      break 2
-    fi
-  done
+  while read -r id; do
+    [[ -n "$id" ]] || continue
+    [[ "$id" != "$EDITOR" ]] || continue
+    name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
+    case "$name" in
+      "Open Schematic"|"Open File"|"Open")
+        DIALOG="$id"
+        break
+        ;;
+    esac
+  done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
+  [[ -n "$DIALOG" ]] && break
   sleep 1
 done
 
@@ -110,9 +113,6 @@ sleep 1
 xdotool type --window "$DIALOG" --clearmodifiers --delay 1 "$LEGACY"
 xdotool key --window "$DIALOG" Return
 
-# Wait until the editor title proves that the requested legacy schematic is
-# actually loaded. This also catches conversion/error dialogs instead of
-# blindly saving the empty editor.
 WINDOW=""
 for _ in $(seq 1 60); do
   for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do

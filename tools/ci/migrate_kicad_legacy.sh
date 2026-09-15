@@ -14,7 +14,8 @@ if [[ ! -f "$LEGACY" ]]; then
 fi
 
 export KICAD_CONFIG_HOME="$ROOT/build/kicad/config"
-KICAD_SETTINGS_DIR="$KICAD_CONFIG_HOME/7.0"
+KICAD_MAJOR="$(kicad-cli version | sed -E 's/^([0-9]+).*/\1/')"
+KICAD_SETTINGS_DIR="$KICAD_CONFIG_HOME/${KICAD_MAJOR}.0"
 mkdir -p "$KICAD_SETTINGS_DIR"
 cat >"$KICAD_SETTINGS_DIR/kicad_common.json" <<'JSON'
 {
@@ -51,15 +52,20 @@ rm -f "$NATIVE" "$ALT"
 eeschema >"$LOG" 2>&1 &
 EESCHEMA_PID=$!
 
+# KiCad releases have changed the X11 WM_CLASS used by eeschema.  Detect the
+# editor primarily by its title and only use the class as a compatibility hint.
 EDITOR=""
 for _ in $(seq 1 60); do
-  for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do
+  while read -r id; do
+    [[ -n "$id" ]] || continue
     name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
-    if [[ "$name" == *"Schematic Editor"* ]]; then
+    class="$(xprop -id "$id" WM_CLASS 2>/dev/null || true)"
+    if [[ "$name" == *"Schematic Editor"* || "$class" == *"eeschema"* || "$class" == *"Eeschema"* ]]; then
       EDITOR="$id"
-      break 2
+      break
     fi
-  done
+  done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
+  [[ -n "$EDITOR" ]] && break
   if ! kill -0 "$EESCHEMA_PID" 2>/dev/null; then
     echo "Eeschema exited before editor appeared" >&2
     cat "$LOG" >&2 || true
@@ -70,6 +76,10 @@ done
 
 if [[ -z "$EDITOR" ]]; then
   echo "Eeschema editor did not appear" >&2
+  echo "visible windows:" >&2
+  xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do
+    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true) / $(xprop -id "$id" WM_CLASS 2>/dev/null || true)" >&2
+  done
   cat "$LOG" >&2 || true
   exit 1
 fi
@@ -115,16 +125,11 @@ if xdotool search --onlyvisible --name '^Open Schematic$' >/dev/null 2>&1; then
   xdotool key --clearmodifiers Return
 fi
 
-# KiCad 7 opens a modal Remap Symbols dialog when importing old .sch files.
-# Accept the automatic remap so loading can finish.  Tab/Return is used rather
-# than coordinates to keep this independent of runner DPI/theme.
 for _ in $(seq 1 60); do
   REMAP="$(xdotool search --onlyvisible --name '^Remap Symbols$' 2>/dev/null | tail -n1 || true)"
   if [[ -n "$REMAP" ]]; then
     echo "Remap dialog: $REMAP" | tee -a "$LOG"
     xdotool windowfocus --sync "$REMAP" 2>/dev/null || true
-    # Default action is normally Remap Symbols. Try Return first; if the
-    # dialog remains, traverse controls until the affirmative button fires.
     xdotool key --clearmodifiers Return 2>/dev/null || true
     sleep 2
     if xdotool search --onlyvisible --name '^Remap Symbols$' >/dev/null 2>&1; then
@@ -139,7 +144,6 @@ for _ in $(seq 1 60); do
     fi
     break
   fi
-  # If the editor title already changed, no remap dialog needs handling.
   if xdotool search --onlyvisible --name '.*C64Ethernet_M1_2N_legacy_capture.*' >/dev/null 2>&1; then
     break
   fi
@@ -148,13 +152,15 @@ done
 
 WINDOW=""
 for _ in $(seq 1 90); do
-  for id in $(xdotool search --onlyvisible --class Eeschema 2>/dev/null || true); do
+  while read -r id; do
+    [[ -n "$id" ]] || continue
     name="$(xdotool getwindowname "$id" 2>/dev/null || true)"
     if [[ "$name" == *"C64Ethernet_M1_2N_legacy_capture"* ]]; then
       WINDOW="$id"
-      break 2
+      break
     fi
-  done
+  done < <(xdotool search --onlyvisible --name '.*' 2>/dev/null || true)
+  [[ -n "$WINDOW" ]] && break
   sleep 1
 done
 
@@ -162,7 +168,7 @@ if [[ -z "$WINDOW" ]]; then
   echo "legacy schematic did not load" >&2
   echo "visible windows:" >&2
   xdotool search --onlyvisible --name '.*' 2>/dev/null | while read -r id; do
-    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true)" >&2
+    echo "  $id: $(xdotool getwindowname "$id" 2>/dev/null || true) / $(xprop -id "$id" WM_CLASS 2>/dev/null || true)" >&2
   done
   cat "$LOG" >&2 || true
   exit 1

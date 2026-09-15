@@ -175,8 +175,39 @@ if [[ -z "$WINDOW" ]]; then
 fi
 
 echo "Loaded legacy schematic: $WINDOW ($(xdotool getwindowname "$WINDOW" 2>/dev/null || true))" | tee -a "$LOG"
+
+# KiCad 9 may leave Remap Symbols mapped even after the legacy schematic is
+# visible.  A mapped modal steals Ctrl+Shift+S from the editor, so explicitly
+# dismiss any stale migration dialogs and prove the editor owns focus before
+# attempting Save As.
+for _ in $(seq 1 20); do
+  STALE="$(xdotool search --onlyvisible --name '^(Remap Symbols|Project Rescue Helper)$' 2>/dev/null | tail -n1 || true)"
+  [[ -n "$STALE" ]] || break
+  echo "Dismissing stale migration dialog: $STALE ($(xdotool getwindowname "$STALE" 2>/dev/null || true))" | tee -a "$LOG"
+  xdotool windowfocus --sync "$STALE" 2>/dev/null || true
+  xdotool key --clearmodifiers Escape 2>/dev/null || true
+  sleep 1
+  if xdotool search --onlyvisible --name '^(Remap Symbols|Project Rescue Helper)$' >/dev/null 2>&1; then
+    xdotool key --clearmodifiers alt+F4 2>/dev/null || true
+    sleep 1
+  fi
+done
+
+if xdotool search --onlyvisible --name '^(Remap Symbols|Project Rescue Helper)$' >/dev/null 2>&1; then
+  echo "migration modal still visible before Save As" >&2
+  exit 1
+fi
+
 xdotool windowfocus --sync "$WINDOW"
-xdotool key --clearmodifiers ctrl+shift+s
+sleep 1
+FOCUSED="$(xdotool getwindowfocus 2>/dev/null || true)"
+if [[ "$FOCUSED" != "$WINDOW" ]]; then
+  echo "editor did not acquire focus before Save As: wanted $WINDOW got $FOCUSED" >&2
+  exit 1
+fi
+
+echo "Editor focused for Save As: $WINDOW" | tee -a "$LOG"
+xdotool key --window "$WINDOW" --clearmodifiers ctrl+shift+s
 sleep 2
 
 # KiCad 9 converts a legacy .sch through Save As.  Drive the native chooser
@@ -198,14 +229,11 @@ done
 if [[ -n "$SAVE" ]]; then
   echo "Save dialog: $SAVE ($(xdotool getwindowname "$SAVE" 2>/dev/null || true))" | tee -a "$LOG"
   xdotool windowfocus --sync "$SAVE" 2>/dev/null || true
-  # GTK/wx file chooser: '/' opens the location entry.  Enter the complete
-  # destination so directory and basename are both deterministic.
   xdotool key --clearmodifiers slash 2>/dev/null || true
   sleep 1
   xdotool type --clearmodifiers --delay 1 "$NATIVE"
   xdotool key --clearmodifiers Return
   sleep 2
-  # Some chooser variants use the first Return only to accept the location.
   if xdotool search --onlyvisible --name '^(Save Schematic As|Save As|Save File|Save)$' >/dev/null 2>&1; then
     xdotool key --clearmodifiers Return 2>/dev/null || true
   fi
@@ -215,7 +243,6 @@ else
   xdotool key --clearmodifiers ctrl+s
 fi
 
-# Accept an overwrite/format confirmation if KiCad presents one.
 for _ in $(seq 1 20); do
   if [[ -f "$NATIVE" || -f "$ALT" ]]; then break; fi
   CONFIRM="$(xdotool search --onlyvisible --name '^(Confirm Save As|Confirm|Warning)$' 2>/dev/null | tail -n1 || true)"

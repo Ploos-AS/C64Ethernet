@@ -20,7 +20,7 @@ LC4032V-5TN48C CPLD
 Text Notes 7600 900 0 100 ~ 20
 W5500 ETHERNET
 Text Notes 900 6750 0 60 ~ 12
-M1.2N capture: symbolized engineering source for migration to native .kicad_sch.
+M1.2N capture: labels are anchored directly to symbol pins for deterministic KiCad migration/ERC connectivity.
 $Comp
 L C64_USERPORT J1
 U 1 1 10000001
@@ -84,154 +84,94 @@ F 1 "25MHz" H 7600 5600 50 0000 C CNN
 	1    7600 5400
 	1 0 0 -1
 $EndComp
-Wire Wire Line
-	2500 3000 3000 3000
-Wire Wire Line
-	3000 3000 3000 2900
-Wire Wire Line
-	3000 2900 3900 2900
-Wire Wire Line
-	2500 3100 3100 3100
-Wire Wire Line
-	3100 3100 3100 3000
-Wire Wire Line
-	3100 3000 3900 3000
-Wire Wire Line
-	2500 3200 3200 3200
-Wire Wire Line
-	3200 3200 3200 3100
-Wire Wire Line
-	3200 3100 3900 3100
-Wire Wire Line
-	2500 3300 3300 3300
-Wire Wire Line
-	3300 3300 3300 3200
-Wire Wire Line
-	3300 3200 3900 3200
-Wire Wire Line
-	2500 3400 3400 3400
-Wire Wire Line
-	3400 3400 3400 3300
-Wire Wire Line
-	3400 3300 3900 3300
-Wire Wire Line
-	2500 3500 3500 3500
-Wire Wire Line
-	3500 3500 3500 3400
-Wire Wire Line
-	3500 3400 3900 3400
-Wire Wire Line
-	2500 3600 3600 3600
-Wire Wire Line
-	3600 3600 3600 3500
-Wire Wire Line
-	3600 3500 3900 3500
-Wire Wire Line
-	2500 3700 3700 3700
-Wire Wire Line
-	3700 3700 3700 3600
-Wire Wire Line
-	3700 3600 3900 3600
-Wire Wire Line
-	2500 3900 3800 3900
-Wire Wire Line
-	3800 3900 3800 3800
-Wire Wire Line
-	3800 3800 3900 3800
-Wire Wire Line
-	2500 4000 3850 4000
-Wire Wire Line
-	3850 4000 3850 3900
-Wire Wire Line
-	3850 3900 3900 3900
-Wire Wire Line
-	5500 2900 6900 2900
-Wire Wire Line
-	5500 3000 6900 3000
-Wire Wire Line
-	5500 3100 6900 3100
-Wire Wire Line
-	5500 3200 6900 3200
-Wire Wire Line
-	5500 3300 6900 3300
-Wire Wire Line
-	5500 3400 6900 3400
-Wire Wire Line
-	8500 3100 9000 3100
-Wire Wire Line
-	8500 3200 9000 3200
-Wire Wire Line
-	8500 3400 9000 3400
-Wire Wire Line
-	8500 3500 9000 3500
-Wire Wire Line
-	9450 3200 9700 3200
-Wire Wire Line
-	9450 3300 9700 3300
-Wire Wire Line
-	9450 3500 9700 3500
-Wire Wire Line
-	9450 3600 9700 3600
-Wire Wire Line
-	4250 5500 4100 5500
-Wire Wire Line
-	5150 5500 5300 5500
-Wire Wire Line
-	6650 5400 6500 5400
-Wire Wire Line
-	6950 5400 7450 5400
-Wire Wire Line
-	7750 5400 7900 5400
-Text Label 2600 3000 0 50 ~ 0
+Text Label 2500 3000 0 50 ~ 0
 PB0
-Text Label 2600 3100 0 50 ~ 0
+Text Label 2500 3100 0 50 ~ 0
 PB1
-Text Label 2600 3200 0 50 ~ 0
+Text Label 2500 3200 0 50 ~ 0
 PB2
-Text Label 2600 3300 0 50 ~ 0
+Text Label 2500 3300 0 50 ~ 0
 PB3
-Text Label 2600 3400 0 50 ~ 0
+Text Label 2500 3400 0 50 ~ 0
 PB4
-Text Label 2600 3500 0 50 ~ 0
+Text Label 2500 3500 0 50 ~ 0
 PB5
-Text Label 2600 3600 0 50 ~ 0
+Text Label 2500 3600 0 50 ~ 0
 PB6
-Text Label 2600 3700 0 50 ~ 0
+Text Label 2500 3700 0 50 ~ 0
 PB7
-Text Label 2600 3900 0 50 ~ 0
+Text Label 2500 3900 0 50 ~ 0
 PA2_HOST_STROBE
-Text Label 2600 4000 0 50 ~ 0
+Text Label 2500 4000 0 50 ~ 0
 DEVICE_IRQ
-Text Label 5600 2900 0 50 ~ 0
+Text Label 3900 2900 2 50 ~ 0
+PB0
+Text Label 3900 3000 2 50 ~ 0
+PB1
+Text Label 3900 3100 2 50 ~ 0
+PB2
+Text Label 3900 3200 2 50 ~ 0
+PB3
+Text Label 3900 3300 2 50 ~ 0
+PB4
+Text Label 3900 3400 2 50 ~ 0
+PB5
+Text Label 3900 3500 2 50 ~ 0
+PB6
+Text Label 3900 3600 2 50 ~ 0
+PB7
+Text Label 3900 3800 2 50 ~ 0
+PA2_HOST_STROBE
+Text Label 3900 3900 2 50 ~ 0
+DEVICE_IRQ
+Text Label 5500 2900 0 50 ~ 0
 SCLK
-Text Label 5600 3000 0 50 ~ 0
+Text Label 5500 3000 0 50 ~ 0
 MOSI
-Text Label 5600 3100 0 50 ~ 0
+Text Label 5500 3100 0 50 ~ 0
 MISO
-Text Label 5600 3200 0 50 ~ 0
+Text Label 5500 3200 0 50 ~ 0
 SCSn
-Text Label 5600 3300 0 50 ~ 0
+Text Label 5500 3300 0 50 ~ 0
 INTn
-Text Label 5600 3400 0 50 ~ 0
+Text Label 5500 3400 0 50 ~ 0
 RSTn
-Text Label 8600 3100 0 50 ~ 0
-TXP
-Text Label 8600 3200 0 50 ~ 0
-TXN
-Text Label 8600 3400 0 50 ~ 0
-RXP
-Text Label 8600 3500 0 50 ~ 0
-RXN
-Text Label 9550 3200 0 50 ~ 0
-TXP
-Text Label 9550 3300 0 50 ~ 0
-TXN
-Text Label 9550 3500 0 50 ~ 0
-RXP
-Text Label 9550 3600 0 50 ~ 0
-RXN
-Text Label 6500 5400 2 50 ~ 0
+Text Label 6900 2900 2 50 ~ 0
+SCLK
+Text Label 6900 3000 2 50 ~ 0
+MOSI
+Text Label 6900 3100 2 50 ~ 0
+MISO
+Text Label 6900 3200 2 50 ~ 0
+SCSn
+Text Label 6900 3300 2 50 ~ 0
+INTn
+Text Label 6900 3400 2 50 ~ 0
+RSTn
+Text Label 8500 2900 0 50 ~ 0
 EXRES1
-Text Label 7900 5400 0 50 ~ 0
+Text Label 8500 3100 0 50 ~ 0
+TXP
+Text Label 8500 3200 0 50 ~ 0
+TXN
+Text Label 8500 3400 0 50 ~ 0
+RXP
+Text Label 8500 3500 0 50 ~ 0
+RXN
+Text Label 9450 3200 2 50 ~ 0
+TXP
+Text Label 9450 3300 2 50 ~ 0
+TXN
+Text Label 9450 3500 2 50 ~ 0
+RXP
+Text Label 9450 3600 2 50 ~ 0
+RXN
+Text Label 6650 5400 2 50 ~ 0
+EXRES1
+Text Label 6950 5400 0 50 ~ 0
+GND
+Text Label 7450 5400 2 50 ~ 0
+OSC_RETURN
+Text Label 7750 5400 0 50 ~ 0
 OSC_RETURN
 $EndSCHEMATC

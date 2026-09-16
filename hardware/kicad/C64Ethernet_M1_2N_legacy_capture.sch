@@ -5,12 +5,12 @@ EELAYER END
 $Descr A4 11693 8268
 Sheet 1 1
 Title "C64Ethernet M1.2N engineering capture"
-Date "2026-09-15"
+Date "2026-09-16"
 Rev "M1.2N"
 Comp "Ploos-AS"
 Comment1 "Legacy capture prepared for KiCad migration"
 Comment2 "C64 User Port -> LC4032V -> W5500 -> Ethernet"
-Comment3 "Not ERC qualified"
+Comment3 "ERC qualification in progress"
 Comment4 "Do not manufacture from this revision"
 $EndDescr
 Text Notes 900 900 0 100 ~ 20
@@ -25,7 +25,7 @@ $Comp
 L C64_USERPORT J1
 U 1 1 10000001
 P 1800 3500
-F 0 "J1" H 1800 4550 50  0000 C CNN
+F 0 "J1" H 1800 4550 50 0000 C CNN
 F 1 "C64_USERPORT" H 1800 4450 50 0000 C CNN
 	1    1800 3500
 	1 0 0 -1
@@ -85,106 +85,110 @@ F 1 "25MHz" H 7600 5600 50 0000 C CNN
 	1 0 0 -1
 $EndComp
 Wire Wire Line
-	2300 3000 4000 3000
+	2500 3000 3900 3000
 Wire Wire Line
-	2300 3100 4000 3100
+	2500 3100 3900 3100
 Wire Wire Line
-	2300 3200 4000 3200
+	2500 3200 3900 3200
 Wire Wire Line
-	2300 3300 4000 3300
+	2500 3300 3900 3300
 Wire Wire Line
-	2300 3400 4000 3400
+	2500 3400 3900 3400
 Wire Wire Line
-	2300 3500 4000 3500
+	2500 3500 3900 3500
 Wire Wire Line
-	2300 3600 4000 3600
+	2500 3600 3900 3600
 Wire Wire Line
-	2300 3700 4000 3700
+	2500 3700 3900 3700
 Wire Wire Line
-	2300 3900 4000 3900
+	2500 3900 3900 3900
 Wire Wire Line
-	5400 3000 7000 3000
+	2500 4000 3900 4000
 Wire Wire Line
-	5400 3100 7000 3100
+	5500 3000 6900 3000
 Wire Wire Line
-	5400 3200 7000 3200
+	5500 3100 6900 3100
 Wire Wire Line
-	5400 3300 7000 3300
+	5500 3200 6900 3200
 Wire Wire Line
-	5400 3400 7000 3400
+	5500 3300 6900 3300
 Wire Wire Line
-	5400 3500 7000 3500
+	5500 3400 6900 3400
 Wire Wire Line
-	5400 3600 7000 3600
+	5500 3500 6900 3500
 Wire Wire Line
-	5400 3700 7000 3700
+	8500 3100 9000 3100
 Wire Wire Line
-	8400 3000 9700 3000
+	8500 3200 9000 3200
 Wire Wire Line
-	8400 3100 9700 3100
+	8500 3400 9000 3400
 Wire Wire Line
-	8400 3200 9700 3200
+	8500 3500 9000 3500
 Wire Wire Line
-	8400 3300 9700 3300
+	9450 3200 9700 3200
 Wire Wire Line
-	8400 3400 9700 3400
+	9450 3300 9700 3300
 Wire Wire Line
-	8400 3500 9700 3500
+	9450 3500 9700 3500
 Wire Wire Line
-	8400 3600 9700 3600
+	9450 3600 9700 3600
 Wire Wire Line
-	8400 3700 9700 3700
+	4250 5500 4100 5500
 Wire Wire Line
-	4400 5600 4200 5600
-Wire Wire Line
-	5000 5600 5200 5600
+	5150 5500 5300 5500
 Wire Wire Line
 	6650 5400 6500 5400
 Wire Wire Line
 	6950 5400 7450 5400
 Wire Wire Line
 	7750 5400 7900 5400
-Text Label 2400 3000 0 50 ~ 0
+Text Label 2600 3000 0 50 ~ 0
 PB0
-Text Label 2400 3100 0 50 ~ 0
+Text Label 2600 3100 0 50 ~ 0
 PB1
-Text Label 2400 3200 0 50 ~ 0
+Text Label 2600 3200 0 50 ~ 0
 PB2
-Text Label 2400 3300 0 50 ~ 0
+Text Label 2600 3300 0 50 ~ 0
 PB3
-Text Label 2400 3400 0 50 ~ 0
+Text Label 2600 3400 0 50 ~ 0
 PB4
-Text Label 2400 3500 0 50 ~ 0
+Text Label 2600 3500 0 50 ~ 0
 PB5
-Text Label 2400 3600 0 50 ~ 0
+Text Label 2600 3600 0 50 ~ 0
 PB6
-Text Label 2400 3700 0 50 ~ 0
+Text Label 2600 3700 0 50 ~ 0
 PB7
-Text Label 2400 3900 0 50 ~ 0
+Text Label 2600 3900 0 50 ~ 0
 PA2_HOST_STROBE
-Text Label 5450 3000 0 50 ~ 0
+Text Label 2600 4000 0 50 ~ 0
+DEVICE_IRQ
+Text Label 5600 3000 0 50 ~ 0
 SCLK
-Text Label 5450 3100 0 50 ~ 0
+Text Label 5600 3100 0 50 ~ 0
 MOSI
-Text Label 5450 3200 0 50 ~ 0
+Text Label 5600 3200 0 50 ~ 0
 MISO
-Text Label 5450 3300 0 50 ~ 0
+Text Label 5600 3300 0 50 ~ 0
 SCSn
-Text Label 5450 3400 0 50 ~ 0
+Text Label 5600 3400 0 50 ~ 0
 INTn
-Text Label 5450 3500 0 50 ~ 0
+Text Label 5600 3500 0 50 ~ 0
 RSTn
-Text Label 5450 3600 0 50 ~ 0
-3V3
-Text Label 5450 3700 0 50 ~ 0
-GND
-Text Label 8500 3000 0 50 ~ 0
+Text Label 8600 3100 0 50 ~ 0
 TXP
-Text Label 8500 3100 0 50 ~ 0
+Text Label 8600 3200 0 50 ~ 0
 TXN
-Text Label 8500 3200 0 50 ~ 0
+Text Label 8600 3400 0 50 ~ 0
 RXP
-Text Label 8500 3300 0 50 ~ 0
+Text Label 8600 3500 0 50 ~ 0
+RXN
+Text Label 9550 3200 0 50 ~ 0
+TXP
+Text Label 9550 3300 0 50 ~ 0
+TXN
+Text Label 9550 3500 0 50 ~ 0
+RXP
+Text Label 9550 3600 0 50 ~ 0
 RXN
 Text Label 6500 5400 2 50 ~ 0
 EXRES1

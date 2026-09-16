@@ -4,12 +4,10 @@ on:
   push:
     paths:
       - 'hardware/kicad/**'
-      - 'tools/ci/**'
       - '.github/workflows/kicad-schematic.yml'
   pull_request:
     paths:
       - 'hardware/kicad/**'
-      - 'tools/ci/**'
       - '.github/workflows/kicad-schematic.yml'
 
 jobs:
@@ -19,30 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install KiCad 7 and headless GUI helpers
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y kicad xvfb xdotool
-          echo "Migration KiCad version: $(kicad-cli version)"
-          kicad-cli version | grep -E '^7\.'
-          chmod +x tools/ci/migrate_kicad_legacy.sh
-
-      - name: Migrate legacy schematic with KiCad 7
-        run: tools/ci/migrate_kicad_legacy.sh
-
-      - name: Verify native schematic produced
-        run: |
-          test -s hardware/kicad/C64Ethernet.kicad_sch
-          grep -q '(kicad_sch' hardware/kicad/C64Ethernet.kicad_sch
-          grep -q '(symbol ' hardware/kicad/C64Ethernet.kicad_sch
-
-      - name: Upgrade to KiCad 9 for ERC
+      - name: Install KiCad 9
         run: |
           sudo add-apt-repository --yes ppa:kicad/kicad-9.0-releases
           sudo apt-get update
           sudo apt-get install -y kicad
           echo "ERC KiCad version: $(kicad-cli version)"
           kicad-cli version | grep -E '^9\.'
+
+      - name: Verify committed native schematic
+        run: |
+          test -s hardware/kicad/C64Ethernet.kicad_sch
+          grep -q '(kicad_sch' hardware/kicad/C64Ethernet.kicad_sch
+          grep -q '(symbol ' hardware/kicad/C64Ethernet.kicad_sch
+          test -s hardware/kicad/sym-lib-table
 
       - name: Run KiCad ERC with KiCad 9
         run: |
@@ -53,7 +41,7 @@ jobs:
             --output build/kicad/C64Ethernet-erc.rpt \
             hardware/kicad/C64Ethernet.kicad_sch
 
-      - name: Upload migrated schematic and validation report
+      - name: Upload native schematic and validation report
         if: always()
         uses: actions/upload-artifact@v4
         with:

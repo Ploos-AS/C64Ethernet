@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "C64Ethernet-cache")(type "Legacy")(uri "${KIPRJMOD}/C64Ethernet-cache.lib")(options "")(descr "C64Ethernet project symbols"))
+)

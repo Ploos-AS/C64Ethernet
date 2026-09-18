@@ -47,4 +47,8 @@ No claim of working hardware or C64 runtime qualification is made at M0.
 
 ## License
 
-MIT. Hardware documentation and design files are included in the project unless otherwise noted.
+Hardware design materials — including schematics, PCB layouts, manufacturing files, and HDL/RTL that describes hardware — are licensed under the **CERN Open Hardware Licence Version 2 - Permissive (CERN-OHL-P-2.0)**. See [LICENSE-HARDWARE](LICENSE-HARDWARE).
+
+Software — including firmware, drivers, host tools, emulators, assemblers, compilers, utilities, and other executable code unless explicitly stated otherwise — is licensed under the **MIT License**. See [LICENSE-SOFTWARE](LICENSE-SOFTWARE).
+
+Files that incorporate third-party material remain subject to their respective licences and notices.
